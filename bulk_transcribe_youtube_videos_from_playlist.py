@@ -13,8 +13,8 @@ from numba import cuda
 convert_single_video = 1  # Set this to 1 to process a single video, 0 for a playlist
 use_spacy_for_sentence_splitting = 1
 max_simultaneous_youtube_downloads = 4
-disable_cuda_override = 1 # Set this to 1 to disable CUDA even if it is available
-single_video_url = 'https://www.youtube.com/watch?v=sWAaJF9Wk0w'  # Single video URL
+disable_cuda_override = 0 # Set this to 1 to disable CUDA even if it is available
+single_video_url = 'https://www.youtube.com/watch?v=u8gTyiWl5jc'  # Single video URL
 playlist_url = 'https://www.youtube.com/playlist?list=PLjpPMe3LP1XKgqqzqz4j6M8-_M_soYxiV' # Playlist URL
 if convert_single_video:
     print(f"Processing a single video: {single_video_url}")
@@ -28,16 +28,7 @@ def add_to_system_path(new_path):
         os.environ["PATH"] = f'"{new_path}"' + os.pathsep + os.environ["PATH"].replace(new_path, "")
 
 def get_cuda_toolkit_path():
-    home_dir = os.path.expanduser('~')  # Get the home directory of the current user
-    if sys.platform in ["win32", "linux", "linux2", "darwin"]:  # Build the base path to the Anaconda 'pkgs' directory; Works for Windows, Linux, macOS
-        anaconda_base_path = os.path.join(home_dir, "anaconda3", "pkgs")
-    cuda_glob_pattern = os.path.join(anaconda_base_path, "cudatoolkit-*", "Library", "bin") # Construct the glob pattern for the cudatoolkit directory
-    cuda_paths = glob.glob(cuda_glob_pattern) # Use glob to find directories that match the pattern
-    if cuda_paths: # Select the first matching path (assuming there is at least one match)
-        return cuda_paths[0]  # Return the first matched path; This is the path to the cudatoolkit directory
-        # cuda_toolkit_path = "C:/Program Files/NVIDIA Corporation/CUDNN/v8.9/bin" # For Windows, use this path if the above doesn't work
-        return cuda_toolkit_path
-    return None
+    return "/opt/cuda/bin" # Where vanilla nvidia installer places cuda
 
 cuda_toolkit_path = get_cuda_toolkit_path()
 print("CUDA Toolkit Path:", cuda_toolkit_path)
@@ -119,7 +110,7 @@ async def compute_transcript_with_whisper_from_audio_func(audio_file_path, audio
     if cuda.is_available() and not disable_cuda_override:
         print("CUDA is available. Using GPU for transcription.")
         device = "cuda"
-        compute_type = "float16"  # Use FP16 for faster computation on GPU
+        compute_type = "float32"  # Use FP16 for faster computation on GPU
     else:
         print("CUDA not available. Using CPU for transcription.")
         device = "cpu"
